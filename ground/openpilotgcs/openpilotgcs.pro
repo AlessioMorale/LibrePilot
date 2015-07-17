@@ -24,6 +24,10 @@ macx {
     QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.6
 }
 
+# use ccache when available
+QMAKE_CC = $$(CCACHE) $$QMAKE_CC
+QMAKE_CXX = $$(CCACHE) $$QMAKE_CXX
+
 include(openpilotgcs.pri)
 
 TEMPLATE  = subdirs
