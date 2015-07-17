@@ -17,11 +17,11 @@ addons:
       - libudev-dev
       - libusb-1.0-0-dev
       - libc6-i386
-  artifacts:
-      paths:
-        - $(ls ./build/*.deb | tr "\n" ":")
-        - $(ls ./build/*.dmg | tr "\n" ":")
-        - $(ls ./build/*.exe | tr "\n" ":")
+#  artifacts:
+#      paths:
+#        - $(ls ./build/*.deb | tr "\n" ":")
+#        - $(ls ./build/*.dmg | tr "\n" ":")
+#        - $(ls ./build/*.exe | tr "\n" ":")
 os:
   - linux
   - osx
