@@ -4,6 +4,7 @@ addons:
   apt:
     packages:
     - curl
+    - ccache
     - build-essential
     - gdb
     - wget
@@ -20,7 +21,7 @@ os:
   - osx
 env:
 
-install: make arm_sdk_install && make qt_sdk_install
-script: make all_fw -j4 && make package -j4
+install: make arm_sdk_install && make qt_sdk_install && make gtest_install
+script: make all_ut_run && make all_fw -j4 && make gcs -j4
 #notifications:
 #  email:
