@@ -204,7 +204,29 @@ endif
 # Command to extract version info data from the repository and source tree
 export VERSION_INFO = $(PYTHON) $(ROOT_DIR)/make/scripts/version-info.py --path=$(ROOT_DIR)
 
-##############################
+# check whether ccache is available
+ifneq  ($(UNAME), Windows)
+	CCACHE_VER := $(shell ccache --version 2>/dev/null)
+	BREW_VER := $(shell brew --version 2>/dev/null)
+	ifdef CCACHE_VER
+		export CCACHE := ccache
+		#Linux/Ubuntu
+		ifeq ($(shell [ -d "/usr/lib/ccache/" ] && $(ECHO) "exists"), exists)
+			export PATH :=/usr/lib/ccache/:$(PATH)
+		#Darwin/MacPorts
+		else ifeq ($(shell [ -d "/opt/local/libexec/ccache/" ] && $(ECHO) "exists"), exists)
+			export PATH :="/opt/local/libexec/ccache/:$(PATH)"
+		#Darwin/brew
+		else ifdef BREW_VER
+			ifeq ($(shell [ -d "$(brew --prefix coreutils)/libexec/ccache" ] && $(ECHO) "exists"), exists)
+				export PATH :="$(shell brew --prefix coreutils)/libexec/ccache/:$(PATH)"
+			endif
+		endif
+	endif
+else #Windows
+	export CCACHE :=
+endif
+##############################s
 #
 # Misc settings
 #
