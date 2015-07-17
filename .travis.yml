@@ -1,19 +1,26 @@
 language: cpp
-
+cache: ccache
+addons:
+  apt:
+    packages:
+    - curl
+    - build-essential
+    - gdb
+    - wget
+    - debhelper
+    - p7zip-full
+    - unzip flex
+    - bison
+    - libsdl1.2-dev
+    - libudev-dev
+    - libusb-1.0-0-dev
+    - libc6-i386
 os:
   - linux
   - osx
 env:
 
-install:
-  - if [ "${TRAVIS_OS_NAME}" = "linux" ]; then
-        sudo apt-get update
-        && sudo apt-get install curl build-essential gdb wget debhelper p7zip-full unzip flex bison libsdl1.2-dev libudev-dev libusb-1.0-0-dev libc6-i386
-    ;
-    fi
-    && make all_sdk_install
-script:
-  - make all_fw -j5
-    && make package -j2
+install: make arm_sdk_install && make qt_sdk_install
+script: make all_fw -j4 && make package -j4
 #notifications:
 #  email:
