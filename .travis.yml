@@ -29,7 +29,7 @@ os:
   - osx
 env:
 
-install: make arm_sdk_install && make qt_sdk_install && make gtest_install
+install: make arm_sdk_install && make qt_sdk_install && make gtest_install && make CCACHE=ccache config_new
 script: make all_ut_run && make all_fw -j4 && make package -j4
 #notifications:
 #  email:
