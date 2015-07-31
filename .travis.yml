@@ -1,35 +1,32 @@
 language: cpp
 cache:
   directories:
-    - $HOME/.ccache
+  - "$HOME/.ccache"
 addons:
   apt:
     packages:
-      - curl
-      - ccache
-      - build-essential
-      - gdb
-      - wget
-      - debhelper
-      - p7zip-full
-      - unzip
-      - flex
-      - bison
-      - libsdl1.2-dev
-      - libudev-dev
-      - libusb-1.0-0-dev
-      - libc6-i386
-#  artifacts:
-#      paths:
-#        - $(ls ./build/*.deb | tr "\n" ":")
-#        - $(ls ./build/*.dmg | tr "\n" ":")
-#        - $(ls ./build/*.exe | tr "\n" ":")
+    - curl
+    - ccache
+    - build-essential
+    - gdb
+    - wget
+    - debhelper
+    - p7zip-full
+    - unzip
+    - flex
+    - bison
+    - libsdl1.2-dev
+    - libudev-dev
+    - libusb-1.0-0-dev
+    - libc6-i386
 os:
-  - linux
-  - osx
+- linux
+- osx
 env:
-
+  global:
+  - secure: gIFgjPd7nG4Snb2eMPPSxX4cLVMhD+CZazi/ip8AJGOCUAwpkXMKlF1dhVv0IFQ1MoG3GctjP6gX8jahRz4haEru/GGxtIIXUATFP7pAhgINhK62SWF8rBcBHwYps5tC/I6Tt58X1dWOLaipzWFdhi6dV0X5AXQYaXT4i6fbAEHDfyMiHlPsb4D0pkTI0ICisVm1GT3qi02Vxz+kiVpJNYySe03hhudLTX4/aAGyKjtxXfRwFCpOSrN9paS82o/7ndYc+fTrpajw0Oac5+4qjIv4bDKETFmW5WZu4RUEor4Ovm6oMtt9hdUbdPaTbfXpgmnGZKqtoriYefkQ3wj5hMxqdyd++KmcK0H4u/ewndbZs842GBP9503S61E3Ad9yTadtkWBnlVdzzozWDR6Qm5MSbXfGYa15R9KKvBTXfZQ41PvVV54vMRmyx1rMJzR7S6Xaug6YeFYiIkgNxs9yt44bIbDfot0MpyVP5C9DiKqUksrvUD1U7CYns6Xe8HjusRLiIoxuER8jniwAHIyWWUdEtTGCIbHtWGnCw+zKa8M+FN/kQArAOZD8E4G2d7zzzwmdhP2A1Lpl2UYYaqVgRUdQV15OxWtzL7sXlHfhyh+Pqh1gIFTizWnzGgO1n6rVC7Vt07/pLBg5WwQEP1ukrs5wpqWWuFtB/2GFWlfuMns=
+  - secure: E+vPSDVyNMPab1yQYIIpkU62XA7/eBMNbkd3eHwy3rdncdTOVmWB46yiyW2ERinf4imJKREkhgrKFjhHzowjiYebbXIv42krvYsQbrlA2YRgj2ik8DoTMi/OaUEl6hv0B6aZ7PDac6tA4nfKv8yiSpHka/L1aMAgmmguqRlnLwK0N6TGmO9lhj2tR8jBZMpQgntKisJcnEkUp3HmjlTn0TJ5ojtC310UWyekyV4yDGPRxyFvCl7UhzEGkLepE5B2d0NJZ0X30BpdPRTT2u8nlzXoG0wtNsJhsQ4uK1uoAsFztGfp7/hIDCbKMjPWHPJBlDqJxq2wozlg3RgA82w3fU7Ykbh7yLAX8mkTps070Jv996fqdOzx6lyszoKZH6/rAljdRFM2AjVWwzDHzgp4cGMVITULYJvuwDKpUFE9RcK04Ar8XpxcVuzzKTBQhSLmd5Cj+ZOqtYjxHeuUYlhXrAzZz0siQUNEHYr9cKMlgj05JVLRFg4fDsohobQRUGTRP9B6fslf0okOf4dLAvSiZLFyRU0Ozz2057SeNoYahdvZiNZha4kVpu/cUsa5tQuocYxdpxoR7Blq/FA756EptESFwXhGT7fbAYn0F1VitfPOP7FWI6/ub/xo6KktTLLZTpPNJOyd1rlETz6K8OfWFRooJRZlVfpz1ci36LfZye4=
 install: make arm_sdk_install && make qt_sdk_install && make gtest_install && make CCACHE=ccache config_new
 script: make all_ut_run && make all_fw -j4 && make package -j4
-#notifications:
-#  email:
+after_success:
+  ./.travis/upload.sh
