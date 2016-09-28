@@ -79,7 +79,7 @@ static int8_t counter;
 #define ACTUATOR_ONESHOT125_PULSE_FACTOR 1.5f
 #define ACTUATOR_ONESHOT42_PULSE_FACTOR  0.5f
 #define ACTUATOR_MULTISHOT_PULSE_FACTOR  0.24f
-#define ACTUATOR_PWM_CLOCK               1000000
+#define ACTUATOR_PWM_CLOCK               48000000
 // Private types
 
 

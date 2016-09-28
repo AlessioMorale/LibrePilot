@@ -29,8 +29,8 @@
 
 #include "ui_outputchannelform.h"
 
-#define MAXOUTPUT_VALUE 2500
-#define MINOUTPUT_VALUE 500
+#define MAXOUTPUT_VALUE 20000
+#define MINOUTPUT_VALUE 0
 
 OutputChannelForm::OutputChannelForm(const int index, QWidget *parent) :
     ChannelForm(index, parent), ui(new Ui::outputChannelForm), m_inChannelTest(false)
