@@ -52,7 +52,7 @@ typedef enum {
     NOTIFY_SEQUENCE_ALM_WARN_MAG,
     NOTIFY_SEQUENCE_ALM_ERROR_MAG,
     NOTIFY_SEQUENCE_ALM_CONFIG,
-    NOTIFY_SEQUENCE_ALM_RECEIVER,
+//    NOTIFY_SEQUENCE_ALM_RECEIVER,
     NOTIFY_SEQUENCE_DISARMED,
     NOTIFY_SEQUENCE_ALM_ATTITUDE,
     NOTIFY_SEQUENCE_NULL = 255, // skips any signalling for this condition
@@ -161,7 +161,7 @@ const LedSequence_t notifications[] = {
     [NOTIFY_SEQUENCE_ALM_ERROR_MAG]     = STANDARD_ERROR_SEQUENCE(COLOR_PURPLE, 1),
     [NOTIFY_SEQUENCE_ALM_WARN_MAG]      = STANDARD_WARN_SEQUENCE(COLOR_PURPLE, 1),
     [NOTIFY_SEQUENCE_ALM_CONFIG] = STANDARD_ERROR_SEQUENCE(COLOR_RED, 2),
-    [NOTIFY_SEQUENCE_ALM_RECEIVER]      = STANDARD_ERROR_SEQUENCE(COLOR_YELLOW, 1),
+//  [NOTIFY_SEQUENCE_ALM_RECEIVER]      = STANDARD_ERROR_SEQUENCE(COLOR_YELLOW, 1),
     [NOTIFY_SEQUENCE_ALM_ATTITUDE]      =          { .repeats  = 10, .steps     = {
                                                    { .time_off = 0, .time_on    = 50, .color = COLOR_RED,  .repeats = 1, },
                                                    { .time_off = 0, .time_on    = 50, .color = COLOR_BLUE, .repeats = 1, },
@@ -223,13 +223,13 @@ const AlarmDefinition_t alarmsMap[] = {
         .criticalNotification     = NOTIFY_SEQUENCE_ALM_CONFIG,
         .errorNotification = NOTIFY_SEQUENCE_ALM_CONFIG,
     },
-    {
+/*    {
         .timeBetweenNotifications = 5000,
         .alarmIndex = SYSTEMALARMS_ALARM_RECEIVER,
         .warnNotification = NOTIFY_SEQUENCE_ALM_RECEIVER,
         .criticalNotification     = NOTIFY_SEQUENCE_ALM_RECEIVER,
         .errorNotification = NOTIFY_SEQUENCE_ALM_RECEIVER,
-    },
+    },*/
     {
         .timeBetweenNotifications = 1000,
         .alarmIndex = SYSTEMALARMS_ALARM_ATTITUDE,
