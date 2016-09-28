@@ -153,6 +153,7 @@ UAVOBJS = \
     $${UAVOBJ_XML_DIR}/vtolselftuningstats.xml \
     $${UAVOBJ_XML_DIR}/watchdogstatus.xml \
     $${UAVOBJ_XML_DIR}/waypoint.xml \
+    $${UAVOBJ_XML_DIR}/linesensor.xml \
     $${UAVOBJ_XML_DIR}/waypointactive.xml
 
 include(uavobjgenerator.pri)
