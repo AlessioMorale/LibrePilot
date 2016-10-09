@@ -82,7 +82,8 @@ int32_t LineSensorModuleInitialize(void)
 
 MODULE_INITCALL(LineSensorModuleInitialize, 0);
 
-static void settingscb(__attribute__((unused)) UAVObjEvent *ev){
+static void settingscb(__attribute__((unused)) UAVObjEvent *ev)
+{
     LineSensorSettingsGet(&settings);
 }
 
@@ -100,32 +101,32 @@ static void onTimer(__attribute__((unused)) UAVObjEvent *ev)
         PIOS_Linesensor_read(sensorData.rawsensors);
         static float max = 1;
         static float min = 0xffff;
-        switch (settings.CalibrationMode){
+        switch (settings.CalibrationMode) {
         case LINESENSORSETTINGS_CALIBRATIONMODE_ENABLED:
         {
             calibrationSaved = false;
             for (uint32_t i = 0; i < LINESENSOR_SENSORS_NUMELEM; i++) {
-                    uint16_t value = sensorData.rawsensors[i];
-                    if (value != 0xFFFF) {
-                        max = value > max ? value : max;
-                        min = value < min ? value : min;
-                    } else {
-                        value = max;
-                    }
+                uint16_t value = sensorData.rawsensors[i];
+                if (value != 0xFFFF) {
+                    max = value > max ? value : max;
+                    min = value < min ? value : min;
+                } else {
+                    value = max;
                 }
-                max = (0.999f) * max;
-                min = (1.001f) * min;
             }
+            max = (0.999f) * max;
+            min = (1.001f) * min;
+        }
         break;
 
         case LINESENSORSETTINGS_CALIBRATIONMODE_MANUAL:
-            {
-                max = settings.max;
-                min = settings.min;
-                break;
-            }
+        {
+            max = settings.max;
+            min = settings.min;
+            break;
+        }
         case LINESENSORSETTINGS_CALIBRATIONMODE_DONE:
-            if(!calibrationSaved){
+            if (!calibrationSaved) {
                 calibrationSaved = true;
                 LineSensorSettingsmaxSet(&max);
                 LineSensorSettingsminSet(&min);
@@ -139,13 +140,22 @@ static void onTimer(__attribute__((unused)) UAVObjEvent *ev)
         float n1 = 0;
         float n2 = 0;
         for (uint32_t i = 0; i < LINESENSOR_SENSORS_NUMELEM; i++) {
-            float val =  ((float)sensorData.rawsensors[i] - sensorData.min) / invrange;
+            float val = ((float)sensorData.rawsensors[i] - sensorData.min) * invrange;
 
             sensorData.sensors[i] = val;
             n1 += val * (float)i;
             n2 += val;
         }
-        sensorData.value = (n1/n2 - 3.5f) * settings.range + settings.offset;
+
+        if (n2 > settings.TrackTreshold.Warning) {
+            sensorData.TrackStatus = LINESENSOR_TRACKSTATUS_OK;
+        } else if (n2 > settings.TrackTreshold.Lost) {
+            sensorData.TrackStatus = LINESENSOR_TRACKSTATUS_WARNING;
+        } else {
+            sensorData.TrackStatus = LINESENSOR_TRACKSTATUS_NOTRACK;
+        }
+
+        sensorData.value = (n1 / n2 - 3.5f) * settings.range + settings.offset;
 
         LineSensorSet(&sensorData);
         status = 0;

@@ -7,6 +7,7 @@
         <field name="range" units="deg" type="float" elements="1" defaultvalue ="20"/>
         <field name="offset" units="deg" type="float" elements="1" defaultvalue ="20"/>
         <field name="CalibrationMode" units="" type="enum" elements="1" options="Enabled,Done,Manual" defaultvalue="Done"/>
+        <field name="TrackTreshold" units="" type="float" elementnames="Warning,Lost" defaultvalue="0.2,0.1"/>
         <access gcs="readwrite" flight="readwrite"/>
         <telemetrygcs acked="true" updatemode="onchange" period="0"/>
         <telemetryflight acked="true" updatemode="onchange" period="0"/>
