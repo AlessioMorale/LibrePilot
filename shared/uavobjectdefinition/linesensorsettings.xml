@@ -1,0 +1,15 @@
+<xml>
+    <object name="LineSensorSettings" singleinstance="true" settings="true" category="Sensors">
+        <description>Settings for LineSensor module and calibration </description>
+        <!-- Sensor calibration -->
+        <field name="min" units="raw" type="float" elements="1" defaultvalue = "0" />
+        <field name="max" units="raw" type="float" elements="1" defaultvalue = "45000"/>
+        <field name="range" units="deg" type="float" elements="1" defaultvalue ="20"/>
+        <field name="offset" units="deg" type="float" elements="1" defaultvalue ="20"/>
+        <field name="CalibrationMode" units="" type="enum" elements="1" options="Enabled,Done,Manual" defaultvalue="Done"/>
+        <access gcs="readwrite" flight="readwrite"/>
+        <telemetrygcs acked="true" updatemode="onchange" period="0"/>
+        <telemetryflight acked="true" updatemode="onchange" period="0"/>
+        <logging updatemode="manual" period="0"/>
+    </object>
+</xml>

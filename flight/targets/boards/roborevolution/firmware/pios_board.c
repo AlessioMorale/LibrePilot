@@ -1102,33 +1102,19 @@ void PIOS_Board_Init(void)
 #endif // PIOS_INCLUDE_WS2811
 #ifdef PIOS_INCLUDE_ADC
     {
-        //uint8_t adc_config[HWSETTINGS_ADCROUTING_NUMELEM];
-        //HwSettingsADCRoutingArrayGet(adc_config);
-        GPIO_InitTypeDef gpio = {
-                .GPIO_Speed = GPIO_Speed_2MHz,
-                .GPIO_Mode  = GPIO_Mode_IN,
-                .GPIO_PuPd  = GPIO_PuPd_UP,
-                .GPIO_Pin   = GPIO_Pin_0,
-                .GPIO_OType = GPIO_OType_OD,
-            };
-
-            GPIO_Init(GPIOA, &gpio);
-            gpio.GPIO_Pin   = GPIO_Pin_1;
-            GPIO_Init(GPIOA, &gpio);
-            gpio.GPIO_Pin   = GPIO_Pin_2;
-            GPIO_Init(GPIOA, &gpio);
-            gpio.GPIO_Pin   = GPIO_Pin_3;
-            GPIO_Init(GPIOA, &gpio);
+        uint8_t adc_config[HWSETTINGS_ADCROUTING_NUMELEM];
+        HwSettingsADCRoutingArrayGet(adc_config);
 
         for (uint32_t i = 0; i < HWSETTINGS_ADCROUTING_NUMELEM; i++) {
-            //if (adc_config[i] != HWSETTINGS_ADCROUTING_DISABLED) {
+            if (adc_config[i] != HWSETTINGS_ADCROUTING_DISABLED) {
                 PIOS_ADC_PinSetup(i);
-            //}
+            }
         }
 
     }
 #endif // PIOS_INCLUDE_ADC
 
+    PIOS_Linesensor_Init(&linesensor_cfg);
     DEBUG_PRINTF(2, "Board complete\r\n");
 }
 

@@ -46,49 +46,112 @@
  */
 
 #include "openpilot.h"
-#include "linesensor.h"
+#include <linesensor.h>
+#include <linesensorsettings.h>
+#include <pios_linesensor.h>
+#include <mathmisc.h>
 //
 // Configuration
 //
-#define SAMPLE_PERIOD_MS 5
+#define SAMPLE_PERIOD_MS 2
 // Private types
 
 // Private variables
 
-static const int8_t analogSensorPins[] = { 2, 3, 4, 5 }; // ADC pin for voltage
-static const int8_t analogSensorPos[] = { 2, 3, 4, 5 }; // ADC pin for voltage
-static int8_t analogSensorCount = NELEMENTS(analogSensorPins);
-
 // Private functions
 static void onTimer(UAVObjEvent *ev);
-
+static void settingscb(__attribute__((unused)) UAVObjEvent *ev);
+static LineSensorSettingsData settings;
 /**
  * Initialise the module, called on startup
  * \returns 0 on success or -1 if initialisation failed
  */
 int32_t LineSensorModuleInitialize(void)
 {
-        LineSensorInitialize();
+    LineSensorInitialize();
+    LineSensorSettingsInitialize();
+    static UAVObjEvent ev;
 
-        static UAVObjEvent ev;
-
-        memset(&ev, 0, sizeof(UAVObjEvent));
-        EventPeriodicCallbackCreate(&ev, onTimer, SAMPLE_PERIOD_MS / portTICK_RATE_MS);
+    memset(&ev, 0, sizeof(UAVObjEvent));
+    LineSensorSettingsConnectCallback(&settingscb);
+    settingscb(NULL);
+    EventPeriodicCallbackCreate(&ev, onTimer, SAMPLE_PERIOD_MS / portTICK_RATE_MS);
     return 0;
 }
 
 
 MODULE_INITCALL(LineSensorModuleInitialize, 0);
+
+static void settingscb(__attribute__((unused)) UAVObjEvent *ev){
+    LineSensorSettingsGet(&settings);
+}
+
 static void onTimer(__attribute__((unused)) UAVObjEvent *ev)
 {
+    static bool calibrationSaved = false;
     static LineSensorData sensorData;
+    static uint8_t status;
 
-    for(uint8_t i = 0; i < analogSensorCount; i++){
-        sensorData.sensors[analogSensorPos[i]] = (int16_t) (PIOS_ADC_PinGetVolt(analogSensorPins[i]) * 10000.0f);
+    switch (status) {
+    case 0:
+        PIOS_Linesensor_start();
+        break;
+    default:
+        PIOS_Linesensor_read(sensorData.rawsensors);
+        static float max = 1;
+        static float min = 0xffff;
+        switch (settings.CalibrationMode){
+        case LINESENSORSETTINGS_CALIBRATIONMODE_ENABLED:
+        {
+            calibrationSaved = false;
+            for (uint32_t i = 0; i < LINESENSOR_SENSORS_NUMELEM; i++) {
+                    uint16_t value = sensorData.rawsensors[i];
+                    if (value != 0xFFFF) {
+                        max = value > max ? value : max;
+                        min = value < min ? value : min;
+                    } else {
+                        value = max;
+                    }
+                }
+                max = (0.999f) * max;
+                min = (1.001f) * min;
+            }
+        break;
+
+        case LINESENSORSETTINGS_CALIBRATIONMODE_MANUAL:
+            {
+                max = settings.max;
+                min = settings.min;
+                break;
+            }
+        case LINESENSORSETTINGS_CALIBRATIONMODE_DONE:
+            if(!calibrationSaved){
+                calibrationSaved = true;
+                LineSensorSettingsmaxSet(&max);
+                LineSensorSettingsminSet(&min);
+            }
+            break;
+        }
+
+        sensorData.max = max;
+        sensorData.min = min;
+        float invrange = 1.0f / (sensorData.max - sensorData.min);
+        float n1 = 0;
+        float n2 = 0;
+        for (uint32_t i = 0; i < LINESENSOR_SENSORS_NUMELEM; i++) {
+            float val =  ((float)sensorData.rawsensors[i] - sensorData.min) / invrange;
+
+            sensorData.sensors[i] = val;
+            n1 += val * (float)i;
+            n2 += val;
+        }
+        sensorData.value = (n1/n2 - 3.5f) * settings.range + settings.offset;
+
+        LineSensorSet(&sensorData);
+        status = 0;
+        return;
     }
-    sensorData.sensors[0]++;
-    // ad a plausibility check: zero voltage => zero current
-    LineSensorSet(&sensorData);
+    status++;
 }
 
 /**

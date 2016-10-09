@@ -173,6 +173,8 @@ int32_t PIOS_TIM_InitChannels(uint32_t *tim_id, const struct pios_tim_channel *c
         const struct pios_tim_channel *chan = &(channels[i]);
 
         /* Enable the peripheral clock for the GPIO */
+        // commented out for now as f4 starts all clocks
+
 /*		switch ((uint32_t)chan->pin.gpio) {
                 case (uint32_t) GPIOA:
                         RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
@@ -187,13 +189,17 @@ int32_t PIOS_TIM_InitChannels(uint32_t *tim_id, const struct pios_tim_channel *c
                         PIOS_Assert(0);
                         break;
                 }
- */                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       // commented out for now as f4 starts all clocks
-        GPIO_Init(chan->pin.gpio, &chan->pin.init);
+ */
 
-        PIOS_DEBUG_Assert(chan->remap);
+        // allows handling of timers with no GPIO
+        if (chan->pin.gpio) {
+            GPIO_Init(chan->pin.gpio, &chan->pin.init);
 
-        // Second parameter should technically be PinSource but they are numerically the same
-        GPIO_PinAFConfig(chan->pin.gpio, chan->pin.pin_source, chan->remap);
+            PIOS_DEBUG_Assert(chan->remap);
+
+            // Second parameter should technically be PinSource but they are numerically the same
+            GPIO_PinAFConfig(chan->pin.gpio, chan->pin.pin_source, chan->remap);
+        }
     }
 
     *tim_id = (uint32_t)tim_dev;

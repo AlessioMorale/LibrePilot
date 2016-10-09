@@ -52,7 +52,7 @@ typedef enum {
     NOTIFY_SEQUENCE_ALM_WARN_MAG,
     NOTIFY_SEQUENCE_ALM_ERROR_MAG,
     NOTIFY_SEQUENCE_ALM_CONFIG,
-//    NOTIFY_SEQUENCE_ALM_RECEIVER,
+// NOTIFY_SEQUENCE_ALM_RECEIVER,
     NOTIFY_SEQUENCE_DISARMED,
     NOTIFY_SEQUENCE_ALM_ATTITUDE,
     NOTIFY_SEQUENCE_NULL = 255, // skips any signalling for this condition
@@ -106,9 +106,9 @@ typedef struct {
  */
 const LedSequence_t notifications[] = {
     [NOTIFY_SEQUENCE_DISARMED] =                   { .repeats  = -1,  .steps    = {
-                                                   { .time_off = 200, .time_on  = 10,  .color = COLOR_BLACK, .repeats = 1, },
-                                                   { .time_off = 100, .time_on  = 100, .color = COLOR_WHITE, .repeats = 1, },
-                                                   { .time_off = 200, .time_on  = 10,  .color = COLOR_BLACK, .repeats = 1, },
+                                                   { .time_off = 200, .time_on   = 10, .color = COLOR_BLACK, .repeats = 1, },
+                                                   { .time_off = 50,  .time_on   = 50, .color = COLOR_WHITE, .repeats = 2, },
+                                                   { .time_off = 200, .time_on   = 10, .color = COLOR_BLACK, .repeats = 1, },
                                                      }, },
     [NOTIFY_SEQUENCE_ARMED_FM_MANUAL] =            { .repeats  = -1,  .steps    = {
                                                    { .time_off = 900, .time_on  = 100, .color = COLOR_BLUE, .repeats = 1, },
@@ -161,7 +161,7 @@ const LedSequence_t notifications[] = {
     [NOTIFY_SEQUENCE_ALM_ERROR_MAG]     = STANDARD_ERROR_SEQUENCE(COLOR_PURPLE, 1),
     [NOTIFY_SEQUENCE_ALM_WARN_MAG]      = STANDARD_WARN_SEQUENCE(COLOR_PURPLE, 1),
     [NOTIFY_SEQUENCE_ALM_CONFIG] = STANDARD_ERROR_SEQUENCE(COLOR_RED, 2),
-//  [NOTIFY_SEQUENCE_ALM_RECEIVER]      = STANDARD_ERROR_SEQUENCE(COLOR_YELLOW, 1),
+// [NOTIFY_SEQUENCE_ALM_RECEIVER]      = STANDARD_ERROR_SEQUENCE(COLOR_YELLOW, 1),
     [NOTIFY_SEQUENCE_ALM_ATTITUDE]      =          { .repeats  = 10, .steps     = {
                                                    { .time_off = 0, .time_on    = 50, .color = COLOR_RED,  .repeats = 1, },
                                                    { .time_off = 0, .time_on    = 50, .color = COLOR_BLUE, .repeats = 1, },

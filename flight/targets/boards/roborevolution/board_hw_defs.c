@@ -1773,21 +1773,21 @@ static const struct pios_tim_clock_cfg tim_12_cfg = {
  * Using TIM3, TIM9, TIM2, TIM5
  */
 static const struct pios_tim_channel pios_tim_servoport_all_pins[] = {
-    TIM_SERVO_CHANNEL_CONFIG(TIM3,  3, B, 0),
-    TIM_SERVO_CHANNEL_CONFIG(TIM3,  4, B, 1),
+    TIM_SERVO_CHANNEL_CONFIG(TIM3, 3, B, 0),
+    TIM_SERVO_CHANNEL_CONFIG(TIM3, 4, B, 1),
     /*TIM_SERVO_CHANNEL_CONFIG(TIM9,  2, A, 3),
-    TIM_SERVO_CHANNEL_CONFIG(TIM2,  3, A, 2),
-    TIM_SERVO_CHANNEL_CONFIG(TIM5,  2, A, 1),
-    TIM_SERVO_CHANNEL_CONFIG(TIM5,  1, A, 0),*/
+       TIM_SERVO_CHANNEL_CONFIG(TIM2,  3, A, 2),
+       TIM_SERVO_CHANNEL_CONFIG(TIM5,  2, A, 1),
+       TIM_SERVO_CHANNEL_CONFIG(TIM5,  1, A, 0),*/
 
     // PWM pins on FlexiIO(receiver) port
 
-    TIM_SERVO_CHANNEL_CONFIG(TIM8,  2, B, 14),
-    TIM_SERVO_CHANNEL_CONFIG(TIM8,  3, B, 15),
-//    TIM_SERVO_CHANNEL_CONFIG(TIM8,  1, C, 6),
-    TIM_SERVO_CHANNEL_CONFIG(TIM8,  2, C, 7),
-    TIM_SERVO_CHANNEL_CONFIG(TIM8,  3, C, 8),
-//    TIM_SERVO_CHANNEL_CONFIG(TIM8,  4, C, 9),
+    TIM_SERVO_CHANNEL_CONFIG(TIM8, 2, B, 14),
+    TIM_SERVO_CHANNEL_CONFIG(TIM8, 3, B, 15),
+// TIM_SERVO_CHANNEL_CONFIG(TIM8,  1, C, 6),
+    TIM_SERVO_CHANNEL_CONFIG(TIM8, 2, C, 7),
+    TIM_SERVO_CHANNEL_CONFIG(TIM8, 3, C, 8),
+// TIM_SERVO_CHANNEL_CONFIG(TIM8,  4, C, 9),
 };
 
 #define PIOS_SERVOPORT_ALL_PINS (NELEMENTS(pios_tim_servoport_all_pins))
@@ -2204,3 +2204,35 @@ void PIOS_WS2811_irq_handler(void)
     PIOS_WS2811_DMA_irq_handler();
 }
 #endif // PIOS_INCLUDE_WS2811
+#include <pios_linesensor.h>
+
+
+DefineLinesensorEXTI_Config(0, EXTI_Line9, GPIOC, GPIO_Pin_9, EXTI9_5_IRQn);
+DefineLinesensorEXTI_Config(1, EXTI_Line12, GPIOB, GPIO_Pin_12, EXTI15_10_IRQn);
+DefineLinesensorEXTI_Config(2, EXTI_Line3, GPIOA, GPIO_Pin_3, EXTI3_IRQn);
+DefineLinesensorEXTI_Config(3, EXTI_Line2, GPIOA, GPIO_Pin_2, EXTI2_IRQn);
+DefineLinesensorEXTI_Config(4, EXTI_Line1, GPIOA, GPIO_Pin_1, EXTI1_IRQn);
+DefineLinesensorEXTI_Config(5, EXTI_Line0, GPIOA, GPIO_Pin_0, EXTI0_IRQn);
+DefineLinesensorEXTI_Config(6, EXTI_Line13, GPIOB, GPIO_Pin_13, EXTI15_10_IRQn);
+DefineLinesensorEXTI_Config(7, EXTI_Line6, GPIOC, GPIO_Pin_6, EXTI9_5_IRQn);
+
+const struct pios_linesensor_cfg linesensor_cfg = {
+    .exti_cfg                  = {
+        &pios_exti_linesensor0_cfg,
+        &pios_exti_linesensor1_cfg,
+        &pios_exti_linesensor2_cfg,
+        &pios_exti_linesensor3_cfg,
+        &pios_exti_linesensor4_cfg,
+        &pios_exti_linesensor5_cfg,
+        &pios_exti_linesensor6_cfg,
+        &pios_exti_linesensor7_cfg,
+    },
+    .timer     = TIM10,
+    .timerInit = {
+        .TIM_Prescaler         = (PIOS_PERIPHERAL_APB2_CLOCK / 24000000) - 1,
+        .TIM_ClockDivision     = TIM_CKD_DIV1,
+        .TIM_CounterMode       = TIM_CounterMode_Up,
+        .TIM_Period            = 65535,
+        .TIM_RepetitionCounter = 0x0000,
+    },
+};
