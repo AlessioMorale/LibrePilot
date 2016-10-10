@@ -155,6 +155,9 @@ UAVOBJS = \
     $${UAVOBJ_XML_DIR}/waypoint.xml \
     $${UAVOBJ_XML_DIR}/linesensor.xml \
     $${UAVOBJ_XML_DIR}/linesensorsettings.xml \
+    $${UAVOBJ_XML_DIR}/linefollowersettings.xml \
+    $${UAVOBJ_XML_DIR}/linefollowercontrol.xml \
+    $${UAVOBJ_XML_DIR}/linefollowerstatus.xml \
     $${UAVOBJ_XML_DIR}/waypointactive.xml
 
 include(uavobjgenerator.pri)

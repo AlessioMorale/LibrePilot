@@ -132,6 +132,9 @@ UAVOBJSRCFILENAMES += systemidentsettings
 UAVOBJSRCFILENAMES += systemidentstate
 UAVOBJSRCFILENAMES += linesensor
 UAVOBJSRCFILENAMES += linesensorsettings
+UAVOBJSRCFILENAMES += linefollowercontrol
+UAVOBJSRCFILENAMES += linefollowerstatus
+UAVOBJSRCFILENAMES += linefollowersettings
 
 
 UAVOBJSRC = $(foreach UAVOBJSRCFILE,$(UAVOBJSRCFILENAMES),$(FLIGHT_UAVOBJ_DIR)/$(UAVOBJSRCFILE).c )

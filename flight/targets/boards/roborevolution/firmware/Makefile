@@ -53,6 +53,7 @@ MODULES += Logging
 MODULES += Telemetry
 MODULES += Notify
 MODULES += LineSensor
+MODULES += LineFollower
 
 #OPTMODULES += AutoTune
 OPTMODULES += ComUsbBridge
