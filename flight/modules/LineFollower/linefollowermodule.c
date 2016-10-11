@@ -122,6 +122,7 @@ static void lineFollowerTask(__attribute__((unused)) void *parameters)
     UAVObjEvent ev;
     LineFollowerStatusStatusOptions currentstatus = LINEFOLLOWERSTATUS_STATUS_IDLE;
     struct pid linePid;
+    pw_variance_t sensvariance;
 
     pid_zero(&linePid);
     float yawrate  = 0.0f;
@@ -129,6 +130,7 @@ static void lineFollowerTask(__attribute__((unused)) void *parameters)
     PiOSDeltatimeConfig timeval;
     float dT;
 
+    pseudo_windowed_variance_init(&sensvariance, 50);
     PIOS_DELTATIME_Init(&timeval, UPDATE_EXPECTED, UPDATE_MIN, UPDATE_MAX, UPDATE_ALPHA);
 
 
@@ -136,24 +138,44 @@ static void lineFollowerTask(__attribute__((unused)) void *parameters)
         if (settingsupdated) {
             settingsupdated = false;
             LineFollowerSettingsGet(&settings);
+            pseudo_windowed_variance_init(&sensvariance, settings.VarianceSamples);
             pid_configure(&linePid, settings.LineSensorPID.Kp, settings.LineSensorPID.Ki, settings.LineSensorPID.Kd, settings.LineSensorPID.ILimit);
         }
         if (xQueueReceive(queue, &ev, TASK_PERIOD_TICK) == pdTRUE) {
             dT = PIOS_DELTATIME_GetAverageSeconds(&timeval);
             LineSensorGet(&sensor);
-            yawrate   = pid_apply(&linePid, -sensor.value, dT);
-            status.yawrate = yawrate;
-            status.dT = dT;
+            if(sensor.TrackStatus == LINESENSOR_TRACKSTATUS_OK){
+                yawrate   = pid_apply(&linePid, -sensor.value, dT);
+                status.yawrate = yawrate;
+                status.dT = dT;
+                pseudo_windowed_variance_push_sample(&sensvariance, sensor.value);
+            } else {
+                yawrate =  status.yawrate;
+            }
         }
 
         // TODO! Throttle processing
+        float var = pseudo_windowed_variance_get(&sensvariance);
+        status.sensorVariance = var;
+        if(var > settings.VarianceThresholds.Med){
+            if(var > settings.VarianceThresholds.Min){
+                throttle = settings.ThrottleLimits.Min;
+            } else {
+                throttle = settings.ThrottleLimits.Med;
+            }
+        } else {
+            throttle = settings.ThrottleLimits.Max;
+        }
 
+        if(sensor.TrackStatus != LINESENSOR_TRACKSTATUS_OK){
+            throttle = settings.ThrottleLimits.Warning;
+        }
 
         status.throttle = throttle;
 
         if (status.Status == LINEFOLLOWERSTATUS_STATUS_RUN) {
             RateDesiredYawSet(&yawrate);
-            // RateDesiredThrustSet(&throttle);
+            RateDesiredThrustSet(&throttle);
         }
 
 
@@ -162,6 +184,7 @@ static void lineFollowerTask(__attribute__((unused)) void *parameters)
             LineFollowerControlGet(&control);
             switch (control.Command) {
             case LINEFOLLOWERCONTROL_COMMAND_IDLE:
+            case LINEFOLLOWERCONTROL_COMMAND_STOP:
                 status.Status = LINEFOLLOWERSTATUS_STATUS_IDLE;
                 break;
             case LINEFOLLOWERCONTROL_COMMAND_CALIBRATE:
@@ -173,8 +196,6 @@ static void lineFollowerTask(__attribute__((unused)) void *parameters)
                     status.Status = LINEFOLLOWERSTATUS_STATUS_ARMING;
                 }
                 break;
-            case LINEFOLLOWERCONTROL_COMMAND_STOP:
-                status.Status = LINEFOLLOWERSTATUS_STATUS_IDLE;
             }
         }
 

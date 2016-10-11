@@ -5,8 +5,8 @@
         <field name="Error" units="" type="enum" elements="1" options="None,LostTrack,NoCalibration" defaultvalue="None"/>
         <field name="yawrate" units="deg/s" type="float" elements="1"/>
         <field name="throttle" units="" type="float" elements="1"/>
+        <field name="sensorVariance" units="deg^2" type="float" elements="1"/>
         <field name="dT" units="s" type="float" elements="1"/>
-        
         <access gcs="readwrite" flight="readwrite"/>
         <telemetrygcs acked="false" updatemode="manual" period="0"/>
         <telemetryflight acked="false" updatemode="periodic" period="100"/>

@@ -1,9 +1,11 @@
 <xml>
     <object name="LineFollowerSettings" singleinstance="true" settings="true" category="Control">
         <description>Settings for LineSensor module and calibration </description>
-        <field name="ThrottleLimits" units="" type="float" elementnames="Min,Max" defaultvalue="0.1,0.5"/>
-        <field name="LineSensorPID" units="" type="float" elementnames="Kp,Ki,Kd,ILimit" defaultvalue="0.001,0.01000,0.00005,0.3"/>
+        <field name="ThrottleLimits" units="" type="float" elementnames="Min,Med,Max,Warning" defaultvalue="0.1,0.15,0.3,0.05"/>
+        <field name="VarianceThresholds" units="deg^2" type="float" elementnames="Min,Med" defaultvalue="22,45"/>
+        <field name="LineSensorPID" units="" type="float" elementnames="Kp,Ki,Kd,ILimit" defaultvalue="13,0.3,0.05,1"/>
         <field name="StartDelay" units="s" type="int8"  elements="1" defaultvalue="2"/>
+        <field name="VarianceSamples" units="" type="uint16"  elements="1" defaultvalue="20"/>
         <access gcs="readwrite" flight="readwrite"/>
         <telemetrygcs acked="true" updatemode="onchange" period="0"/>
         <telemetryflight acked="true" updatemode="onchange" period="0"/>
