@@ -129,6 +129,12 @@ static void lineFollowerTask(__attribute__((unused)) void *parameters)
     float throttle = 0.0f;
     PiOSDeltatimeConfig timeval;
     float dT;
+    const pid_scaler unityscaler = {
+        .p = 1.0f,
+        .i = 1.0f,
+        .d = 1.0f,
+    };
+
 
     pseudo_windowed_variance_init(&sensvariance, 50);
     PIOS_DELTATIME_Init(&timeval, UPDATE_EXPECTED, UPDATE_MIN, UPDATE_MAX, UPDATE_ALPHA);
@@ -144,21 +150,22 @@ static void lineFollowerTask(__attribute__((unused)) void *parameters)
         if (xQueueReceive(queue, &ev, TASK_PERIOD_TICK) == pdTRUE) {
             dT = PIOS_DELTATIME_GetAverageSeconds(&timeval);
             LineSensorGet(&sensor);
-            if(sensor.TrackStatus == LINESENSOR_TRACKSTATUS_OK){
-                yawrate   = pid_apply(&linePid, -sensor.value, dT);
+            if (sensor.TrackStatus == LINESENSOR_TRACKSTATUS_OK) {
+                // yawrate   = pid_apply(&linePid, -sensor.value, dT);
+                yawrate   = pid_apply_setpoint(&linePid, &unityscaler, 0.0f, sensor.value, dT, true);
                 status.yawrate = yawrate;
                 status.dT = dT;
                 pseudo_windowed_variance_push_sample(&sensvariance, sensor.value);
             } else {
-                yawrate =  status.yawrate;
+                yawrate = status.yawrate;
             }
         }
 
         // TODO! Throttle processing
         float var = pseudo_windowed_variance_get(&sensvariance);
         status.sensorVariance = var;
-        if(var > settings.VarianceThresholds.Med){
-            if(var > settings.VarianceThresholds.Min){
+        if (var > settings.VarianceThresholds.Med) {
+            if (var > settings.VarianceThresholds.Min) {
                 throttle = settings.ThrottleLimits.Min;
             } else {
                 throttle = settings.ThrottleLimits.Med;
@@ -167,7 +174,7 @@ static void lineFollowerTask(__attribute__((unused)) void *parameters)
             throttle = settings.ThrottleLimits.Max;
         }
 
-        if(sensor.TrackStatus != LINESENSOR_TRACKSTATUS_OK){
+        if (sensor.TrackStatus != LINESENSOR_TRACKSTATUS_OK) {
             throttle = settings.ThrottleLimits.Warning;
         }
 
