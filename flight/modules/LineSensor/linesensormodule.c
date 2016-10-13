@@ -53,7 +53,7 @@
 //
 // Configuration
 //
-#define SAMPLE_PERIOD_MS 2
+#define SAMPLE_PERIOD_MS 1
 // Private types
 
 // Private variables

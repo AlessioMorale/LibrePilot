@@ -2229,7 +2229,7 @@ const struct pios_linesensor_cfg linesensor_cfg = {
     },
     .timer     = TIM10,
     .timerInit = {
-        .TIM_Prescaler         = (PIOS_PERIPHERAL_APB2_CLOCK / 24000000) - 1,
+        .TIM_Prescaler         = (PIOS_PERIPHERAL_APB2_CLOCK / 42000000) - 1,
         .TIM_ClockDivision     = TIM_CKD_DIV1,
         .TIM_CounterMode       = TIM_CounterMode_Up,
         .TIM_Period            = 65535,
