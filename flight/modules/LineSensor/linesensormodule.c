@@ -105,7 +105,7 @@ static void onTimer(__attribute__((unused)) UAVObjEvent *ev)
         case LINESENSORSETTINGS_CALIBRATIONMODE_ENABLED:
         {
             calibrationSaved = false;
-            for (uint32_t i = 0; i < LINESENSOR_SENSORS_NUMELEM; i++) {
+            for (uint32_t i = 1; i < LINESENSOR_SENSORS_NUMELEM - 1; i++) {
                 uint16_t value = sensorData.rawsensors[i];
                 if (value != 0xFFFF) {
                     max = value > max ? value : max;
@@ -139,7 +139,7 @@ static void onTimer(__attribute__((unused)) UAVObjEvent *ev)
         float invrange = 1.0f / (sensorData.max - sensorData.min);
         float n1 = 0;
         float n2 = 0;
-        for (uint32_t i = 0; i < LINESENSOR_SENSORS_NUMELEM; i++) {
+        for (uint32_t i = 1; i < LINESENSOR_SENSORS_NUMELEM - 1; i++) {
             float val = ((float)sensorData.rawsensors[i] - sensorData.min) * invrange;
 
             sensorData.sensors[i] = val;

@@ -125,8 +125,11 @@ static void lineFollowerTask(__attribute__((unused)) void *parameters)
     pw_variance_t sensvariance;
 
     pid_zero(&linePid);
-    float yawrate  = 0.0f;
-    float throttle = 0.0f;
+    float yawrate   = 0.0f;
+    float throttle  = 0.0f;
+    float throttle_alpha = 0.0f;
+    float yaw_alpha = 0.0f;
+    float updthrottle;
     PiOSDeltatimeConfig timeval;
     float dT;
     const pid_scaler unityscaler = {
@@ -146,13 +149,17 @@ static void lineFollowerTask(__attribute__((unused)) void *parameters)
             LineFollowerSettingsGet(&settings);
             pseudo_windowed_variance_init(&sensvariance, settings.VarianceSamples);
             pid_configure(&linePid, settings.LineSensorPID.Kp, settings.LineSensorPID.Ki, settings.LineSensorPID.Kd, settings.LineSensorPID.ILimit);
+            yaw_alpha = LPF_ALPHA(0.001f, settings.YawCutOffFrequency);
+            throttle_alpha = LPF_ALPHA(0.001f, settings.ThrottleCutOffFrequency);
         }
         if (xQueueReceive(queue, &ev, TASK_PERIOD_TICK) == pdTRUE) {
             dT = PIOS_DELTATIME_GetAverageSeconds(&timeval);
             LineSensorGet(&sensor);
             if (sensor.TrackStatus == LINESENSOR_TRACKSTATUS_OK) {
                 // yawrate   = pid_apply(&linePid, -sensor.value, dT);
-                yawrate   = pid_apply_setpoint(&linePid, &unityscaler, 0.0f, sensor.value, dT, true);
+                float updyawrate = pid_apply_setpoint(&linePid, &unityscaler, 0.0f, sensor.value, dT, true);
+                yawrate   = yaw_alpha * (updyawrate - yawrate) + yawrate;
+
                 status.yawrate = yawrate;
                 status.dT = dT;
                 pseudo_windowed_variance_push_sample(&sensvariance, sensor.value);
@@ -166,18 +173,18 @@ static void lineFollowerTask(__attribute__((unused)) void *parameters)
         status.sensorVariance = var;
         if (var > settings.VarianceThresholds.Med) {
             if (var > settings.VarianceThresholds.Min) {
-                throttle = settings.ThrottleLimits.Min;
+                updthrottle = settings.ThrottleLimits.Min;
             } else {
-                throttle = settings.ThrottleLimits.Med;
+                updthrottle = settings.ThrottleLimits.Med;
             }
         } else {
-            throttle = settings.ThrottleLimits.Max;
+            updthrottle = settings.ThrottleLimits.Max;
         }
 
         if (sensor.TrackStatus != LINESENSOR_TRACKSTATUS_OK) {
-            throttle = settings.ThrottleLimits.Warning;
+            updthrottle = settings.ThrottleLimits.Warning;
         }
-
+        throttle = throttle_alpha * (updthrottle - throttle) + throttle;
         status.throttle = throttle;
 
         if (status.Status == LINEFOLLOWERSTATUS_STATUS_RUN) {

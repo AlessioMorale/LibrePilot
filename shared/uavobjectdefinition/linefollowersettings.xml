@@ -6,7 +6,9 @@
         <field name="LineSensorPID" units="" type="float" elementnames="Kp,Ki,Kd,ILimit" defaultvalue="13,0.3,0.05,1"/>
         <field name="StartDelay" units="s" type="int8"  elements="1" defaultvalue="2"/>
         <field name="VarianceSamples" units="" type="uint16"  elements="1" defaultvalue="20"/>
-        <access gcs="readwrite" flight="readwrite"/>
+        <field name="YawCutOffFrequency" units="Hz" type="float"  elements="1" defaultvalue="2"/>
+		<field name="ThrottleCutOffFrequency" units="Hz" type="float"  elements="1" defaultvalue="2"/>
+		<access gcs="readwrite" flight="readwrite"/>
         <telemetrygcs acked="true" updatemode="onchange" period="0"/>
         <telemetryflight acked="true" updatemode="onchange" period="0"/>
         <logging updatemode="manual" period="0"/>
