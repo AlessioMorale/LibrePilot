@@ -2207,8 +2207,8 @@ void PIOS_WS2811_irq_handler(void)
 #include <pios_linesensor.h>
 
 
-DefineLinesensorEXTI_Config(0, EXTI_Line9, GPIOC, GPIO_Pin_9, EXTI9_5_IRQn);
-DefineLinesensorEXTI_Config(1, EXTI_Line12, GPIOB, GPIO_Pin_12, EXTI15_10_IRQn);
+/*DefineLinesensorEXTI_Config(0, EXTI_Line9, GPIOC, GPIO_Pin_9, EXTI9_5_IRQn);
+DefineLinesensorEXTI_Config(1, EXTI_Line12, GPIOB, GPIO_Pin_12, EXTI15_10_IRQn);*/
 DefineLinesensorEXTI_Config(2, EXTI_Line3, GPIOA, GPIO_Pin_3, EXTI3_IRQn);
 DefineLinesensorEXTI_Config(3, EXTI_Line2, GPIOA, GPIO_Pin_2, EXTI2_IRQn);
 DefineLinesensorEXTI_Config(4, EXTI_Line1, GPIOA, GPIO_Pin_1, EXTI1_IRQn);
@@ -2218,8 +2218,8 @@ DefineLinesensorEXTI_Config(7, EXTI_Line6, GPIOC, GPIO_Pin_6, EXTI9_5_IRQn);
 
 const struct pios_linesensor_cfg linesensor_cfg = {
     .exti_cfg                  = {
-        &pios_exti_linesensor0_cfg,
-        &pios_exti_linesensor1_cfg,
+        /*&pios_exti_linesensor0_cfg,
+        &pios_exti_linesensor1_cfg,*/
         &pios_exti_linesensor2_cfg,
         &pios_exti_linesensor3_cfg,
         &pios_exti_linesensor4_cfg,

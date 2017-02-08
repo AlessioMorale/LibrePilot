@@ -85,7 +85,7 @@ extern bool PIOS_Linesensor_EXT_Int(void);
     }
 
 
-#define NUM_SENSOR 8
+#define NUM_SENSOR 6
 /* Global Types */
 struct pios_linesensor_cfg {
     const struct pios_exti_cfg *exti_cfg[NUM_SENSOR]; /* Pointer to the EXTI configuration */
