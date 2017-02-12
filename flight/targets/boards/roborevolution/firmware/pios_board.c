@@ -260,6 +260,7 @@ uint32_t pios_rcvr_group_map[MANUALCONTROLSETTINGS_CHANNELGROUPS_NONE];
 #define PIOS_COM_MSP_TX_BUF_LEN          128
 #define PIOS_COM_MSP_RX_BUF_LEN          64
 #define PIOS_COM_MAVLINK_TX_BUF_LEN      128
+#define PIOS_COM_MAVLINK_RX_BUF_LEN      128
 
 #if defined(PIOS_INCLUDE_DEBUG_CONSOLE)
 #define PIOS_COM_DEBUGCONSOLE_TX_BUF_LEN 40
@@ -279,6 +280,7 @@ uint32_t pios_com_mavlink_id   = 0;
 
 #if defined(PIOS_INCLUDE_RFM22B)
 uint32_t pios_rfm22b_id        = 0;
+#include <pios_rfm22b_com.h>
 #endif
 
 uintptr_t pios_uavo_settings_fs_id;
@@ -286,11 +288,11 @@ uintptr_t pios_user_fs_id;
 
 /*
  * Setup a com port based on the passed cfg, driver and buffer sizes.
- * tx size <= 0 make the port rx only
- * rx size <= 0 make the port tx only
- * having both tx and rx size <= 0 is not valid and will fail further down in PIOS_COM_Init()
+ * tx size = 0 make the port rx only
+ * rx size = 0 make the port tx only
+ * having both tx and rx size = 0 is not valid and will fail further down in PIOS_COM_Init()
  */
-static void PIOS_Board_configure_com(const struct pios_usart_cfg *usart_port_cfg, size_t rx_buf_len, size_t tx_buf_len,
+static void PIOS_Board_configure_com(const struct pios_usart_cfg *usart_port_cfg, uint16_t rx_buf_len, uint16_t tx_buf_len,
                                      const struct pios_com_driver *com_driver, uint32_t *pios_com_id)
 {
     uint32_t pios_usart_id;
@@ -317,8 +319,53 @@ static void PIOS_Board_configure_com(const struct pios_usart_cfg *usart_port_cfg
         PIOS_Assert(0);
     }
 }
+#if defined(PIOS_INCLUDE_DSM)
+static void PIOS_Board_configure_dsm(const struct pios_usart_cfg *pios_usart_dsm_cfg, const struct pios_dsm_cfg *pios_dsm_cfg,
+                                     const struct pios_com_driver *usart_com_driver,
+                                     ManualControlSettingsChannelGroupsOptions channelgroup, uint8_t *bind)
+{
+    uint32_t pios_usart_dsm_id;
 
-#ifdef PIOS_INCLUDE_PWM
+    if (PIOS_USART_Init(&pios_usart_dsm_id, pios_usart_dsm_cfg)) {
+        PIOS_Assert(0);
+    }
+
+    uint32_t pios_dsm_id;
+    if (PIOS_DSM_Init(&pios_dsm_id, pios_dsm_cfg, usart_com_driver,
+                      pios_usart_dsm_id, *bind)) {
+        PIOS_Assert(0);
+    }
+
+    uint32_t pios_dsm_rcvr_id;
+    if (PIOS_RCVR_Init(&pios_dsm_rcvr_id, &pios_dsm_rcvr_driver, pios_dsm_id)) {
+        PIOS_Assert(0);
+    }
+    pios_rcvr_group_map[channelgroup] = pios_dsm_rcvr_id;
+}
+#endif
+#if defined(PIOS_INCLUDE_IBUS)
+static void PIOS_Board_configure_ibus(const struct pios_usart_cfg *usart_cfg)
+{
+    uint32_t pios_usart_ibus_id;
+
+    if (PIOS_USART_Init(&pios_usart_ibus_id, usart_cfg)) {
+        PIOS_Assert(0);
+    }
+
+    uint32_t pios_ibus_id;
+    if (PIOS_IBUS_Init(&pios_ibus_id, &pios_usart_com_driver, pios_usart_ibus_id)) {
+        PIOS_Assert(0);
+    }
+
+    uint32_t pios_ibus_rcvr_id;
+    if (PIOS_RCVR_Init(&pios_ibus_rcvr_id, &pios_ibus_rcvr_driver, pios_ibus_id)) {
+        PIOS_Assert(0);
+    }
+
+    pios_rcvr_group_map[MANUALCONTROLSETTINGS_CHANNELGROUPS_IBUS] = pios_ibus_rcvr_id;
+}
+#endif
+#if defined(PIOS_INCLUDE_PWM)
 static void PIOS_Board_configure_pwm(const struct pios_pwm_cfg *pwm_cfg)
 {
     /* Set up the receiver port.  Later this should be optional */
@@ -332,7 +379,20 @@ static void PIOS_Board_configure_pwm(const struct pios_pwm_cfg *pwm_cfg)
     }
     pios_rcvr_group_map[MANUALCONTROLSETTINGS_CHANNELGROUPS_PWM] = pios_pwm_rcvr_id;
 }
+#endif
+#if defined(PIOS_INCLUDE_PPM)
+static void PIOS_Board_configure_ppm(const struct pios_ppm_cfg *ppm_cfg)
+{
+    uint32_t pios_ppm_id;
 
+    PIOS_PPM_Init(&pios_ppm_id, ppm_cfg);
+
+    uint32_t pios_ppm_rcvr_id;
+    if (PIOS_RCVR_Init(&pios_ppm_rcvr_id, &pios_ppm_rcvr_driver, pios_ppm_id)) {
+        PIOS_Assert(0);
+    }
+    pios_rcvr_group_map[MANUALCONTROLSETTINGS_CHANNELGROUPS_PPM] = pios_ppm_rcvr_id;
+}
 #endif
 
 static void PIOS_Board_PPM_callback(const int16_t *channels)
@@ -506,6 +566,13 @@ void PIOS_Board_Init(void)
     case HWSETTINGS_RM_FLEXIPORT_GPS:
         PIOS_Board_configure_com(&pios_usart_flexi_cfg, PIOS_COM_GPS_RX_BUF_LEN, PIOS_COM_GPS_TX_BUF_LEN, &pios_usart_com_driver, &pios_com_gps_id);
         break;
+#if defined(PIOS_INCLUDE_DSM)
+    case HWSETTINGS_RM_FLEXIPORT_DSM:
+        // TODO: Define the various Channelgroup for Revo dsm inputs and handle here
+        PIOS_Board_configure_dsm(&pios_usart_dsm_flexi_cfg, &pios_dsm_flexi_cfg,
+                                 &pios_usart_com_driver, MANUALCONTROLSETTINGS_CHANNELGROUPS_DSMFLEXIPORT, &hwsettings_DSMxBind);
+        break;
+#endif
     case HWSETTINGS_RM_FLEXIPORT_DEBUGCONSOLE:
 #if defined(PIOS_INCLUDE_DEBUG_CONSOLE)
         {
@@ -775,7 +842,7 @@ void PIOS_Board_Init(void)
 #endif
         break;
     case HWSETTINGS_RM_MAINPORT_DSM:
-#ifdef PIOS_INCLUDE_DSM
+#if defined(PIOS_INCLUDE_DSM)
         // Force binding to zero on the main port
         hwsettings_DSMxBind = 0;
 
@@ -784,8 +851,9 @@ void PIOS_Board_Init(void)
                                  &pios_usart_com_driver, MANUALCONTROLSETTINGS_CHANNELGROUPS_DSMMAINPORT, &hwsettings_DSMxBind);
 #endif
         break;
+
     case HWSETTINGS_RM_MAINPORT_DEBUGCONSOLE:
-#if defined(PIOS_INCLUDE_IBUS)
+#if defined(PIOS_INCLUDE_DEBUG_CONSOLE)
         {
             PIOS_Board_configure_com(&pios_usart_main_cfg, 0, PIOS_COM_DEBUGCONSOLE_TX_BUF_LEN, &pios_usart_com_driver, &pios_com_debug_id);
         }
@@ -810,10 +878,10 @@ void PIOS_Board_Init(void)
         GPIO_WriteBit(pios_sbus_cfg.inv.gpio, pios_sbus_cfg.inv.init.GPIO_Pin, pios_sbus_cfg.gpio_inv_disable);
     }
 
-    /* Initalize the RFM22B radio COM device. */
+    /* Initialize the RFM22B radio COM device. */
 #if defined(PIOS_INCLUDE_RFM22B)
 
-    /* Fetch the OPinkSettings object. */
+    /* Fetch the OPLinkSettings object. */
     OPLinkSettingsData oplinkSettings;
     OPLinkSettingsGet(&oplinkSettings);
 
@@ -855,7 +923,8 @@ void PIOS_Board_Init(void)
         } else {
             /* Configure the RFM22B device. */
             const struct pios_rfm22b_cfg *rfm22b_cfg = PIOS_BOARD_HW_DEFS_GetRfm22Cfg(bdinfo->board_rev);
-            if (PIOS_RFM22B_Init(&pios_rfm22b_id, PIOS_RFM22_SPI_PORT, rfm22b_cfg->slave_num, rfm22b_cfg)) {
+
+            if (PIOS_RFM22B_Init(&pios_rfm22b_id, PIOS_RFM22_SPI_PORT, rfm22b_cfg->slave_num, rfm22b_cfg, oplinkSettings.RFBand)) {
                 PIOS_Assert(0);
             }
 
@@ -898,6 +967,7 @@ void PIOS_Board_Init(void)
             /* Set the radio configuration parameters. */
             PIOS_RFM22B_SetDeviceID(pios_rfm22b_id, oplinkSettings.CustomDeviceID);
             PIOS_RFM22B_SetCoordinatorID(pios_rfm22b_id, oplinkSettings.CoordID);
+            PIOS_RFM22B_SetXtalCap(pios_rfm22b_id, oplinkSettings.RFXtalCap);
             PIOS_RFM22B_SetChannelConfig(pios_rfm22b_id, datarate, oplinkSettings.MinChannel, oplinkSettings.MaxChannel, is_coordinator, data_mode, ppm_mode);
 
             /* Set the PPM callback if we should be receiving PPM. */
@@ -938,6 +1008,32 @@ void PIOS_Board_Init(void)
 
             /* Reinitialize the modem. */
             PIOS_RFM22B_Reinit(pios_rfm22b_id);
+
+            uint8_t hwsettings_radioaux;
+            HwSettingsRadioAuxStreamGet(&hwsettings_radioaux);
+            // TODO: this is in preparation for full mavlink support and is used by LP-368
+            uint16_t mavlink_rx_size = PIOS_COM_MAVLINK_RX_BUF_LEN;
+
+            switch (hwsettings_radioaux) {
+            case HWSETTINGS_RADIOAUXSTREAM_DEBUGCONSOLE:
+            case HWSETTINGS_RADIOAUXSTREAM_DISABLED:
+                break;
+            case HWSETTINGS_RADIOAUXSTREAM_MAVLINK:
+            {
+                uint8_t *auxrx_buffer = 0;
+                if (mavlink_rx_size) {
+                    auxrx_buffer = (uint8_t *)pios_malloc(mavlink_rx_size);
+                }
+                uint8_t *auxtx_buffer = (uint8_t *)pios_malloc(PIOS_COM_MAVLINK_TX_BUF_LEN);
+                PIOS_Assert(auxrx_buffer);
+                PIOS_Assert(auxtx_buffer);
+                if (PIOS_COM_Init(&pios_com_mavlink_id, &pios_rfm22b_aux_com_driver, pios_rfm22b_id,
+                                  auxrx_buffer, mavlink_rx_size,
+                                  auxtx_buffer, PIOS_COM_BRIDGE_TX_BUF_LEN)) {
+                    PIOS_Assert(0);
+                }
+            }
+            }
         }
     } else {
         oplinkStatus.LinkState = OPLINKSTATUS_LINKSTATE_DISABLED;
@@ -973,6 +1069,21 @@ void PIOS_Board_Init(void)
     case HWSETTINGS_RM_RCVRPORT_PPMMSP:
     case HWSETTINGS_RM_RCVRPORT_PPMMAVLINK:
     case HWSETTINGS_RM_RCVRPORT_PPMGPS:
+#if defined(PIOS_INCLUDE_PPM)
+        PIOS_Board_configure_ppm(&pios_ppm_cfg);
+
+        if (hwsettings_rcvrport == HWSETTINGS_RM_RCVRPORT_PPMOUTPUTS) {
+            // configure servo outputs and the remaining 5 inputs as outputs
+            pios_servo_cfg = &pios_servo_cfg_out_in_ppm;
+        }
+
+        // enable pwm on the remaining channels
+        if (hwsettings_rcvrport == HWSETTINGS_RM_RCVRPORT_PPMPWM) {
+            PIOS_Board_configure_pwm(&pios_pwm_ppm_cfg);
+        }
+
+        break;
+#endif /* PIOS_INCLUDE_PPM */
     case HWSETTINGS_RM_RCVRPORT_OUTPUTS:
         // configure only the servo outputs
         pios_servo_cfg = &pios_servo_cfg_out;
@@ -1006,6 +1117,11 @@ void PIOS_Board_Init(void)
     case HWSETTINGS_RM_RCVRPORT_GPS:
     case HWSETTINGS_RM_RCVRPORT_PPMGPS:
         PIOS_Board_configure_com(&pios_usart_rcvrport_cfg, PIOS_COM_GPS_RX_BUF_LEN, PIOS_COM_GPS_TX_BUF_LEN, &pios_usart_com_driver, &pios_com_gps_id);
+        break;
+    case HWSETTINGS_RM_RCVRPORT_IBUS:
+#if defined(PIOS_INCLUDE_IBUS)
+        PIOS_Board_configure_ibus(&pios_usart_ibus_rcvr_cfg);
+#endif /* PIOS_INCLUDE_IBUS */
         break;
     }
 

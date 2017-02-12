@@ -2204,6 +2204,7 @@ void PIOS_WS2811_irq_handler(void)
     PIOS_WS2811_DMA_irq_handler();
 }
 #endif // PIOS_INCLUDE_WS2811
+#if defined (PIOS_INCLUDE_EXTI)
 #include <pios_linesensor.h>
 
 
@@ -2236,3 +2237,4 @@ const struct pios_linesensor_cfg linesensor_cfg = {
         .TIM_RepetitionCounter = 0x0000,
     },
 };
+#endif
