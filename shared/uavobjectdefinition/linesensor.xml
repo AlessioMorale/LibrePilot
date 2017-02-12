@@ -4,8 +4,6 @@
         <field name="rawsensors" units="raw" type="uint16" elements="8"/>
         <field name="sensors" units="raw" type="float" elements="8"/>
         <field name="value" units="deg" type="float" elements="1"/>
-        <field name="min" units="raw" type="float" elements="1"/>
-        <field name="max" units="raw" type="float" elements="1"/>
         <field name="TrackStatus" units="" type="enum" elements="1" options="Ok,Warning,NoTrack" defaultvalue="Ok"/>
         <access gcs="readwrite" flight="readwrite"/>
         <telemetrygcs acked="false" updatemode="manual" period="0"/>

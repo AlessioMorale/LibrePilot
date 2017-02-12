@@ -62,6 +62,7 @@
 static void onTimer(UAVObjEvent *ev);
 static void settingscb(__attribute__((unused)) UAVObjEvent *ev);
 static LineSensorSettingsData settings;
+static volatile bool settingsUpdated;
 /**
  * Initialise the module, called on startup
  * \returns 0 on success or -1 if initialisation failed
@@ -76,6 +77,7 @@ int32_t LineSensorModuleInitialize(void)
     LineSensorSettingsConnectCallback(&settingscb);
     settingscb(NULL);
     EventPeriodicCallbackCreate(&ev, onTimer, SAMPLE_PERIOD_MS / portTICK_RATE_MS);
+    PIOS_Linesensor_start();
     return 0;
 }
 
@@ -85,22 +87,25 @@ MODULE_INITCALL(LineSensorModuleInitialize, 0);
 static void settingscb(__attribute__((unused)) UAVObjEvent *ev)
 {
     LineSensorSettingsGet(&settings);
+    settingsUpdated = true;
 }
 
 static void onTimer(__attribute__((unused)) UAVObjEvent *ev)
 {
     static bool calibrationSaved = false;
     static LineSensorData sensorData;
-    static uint8_t status;
+//    static uint8_t status;
+    static float max[NUM_SENSOR] = {1};
+    static float min[NUM_SENSOR] = {0xffff};
 
+#if false
     switch (status) {
     case 0:
-        PIOS_Linesensor_start();
         break;
     default:
+#endif
         PIOS_Linesensor_read(sensorData.rawsensors);
-        static float max = 1;
-        static float min = 0xffff;
+        PIOS_Linesensor_start();
         switch (settings.CalibrationMode) {
         case LINESENSORSETTINGS_CALIBRATIONMODE_ENABLED:
         {
@@ -108,45 +113,48 @@ static void onTimer(__attribute__((unused)) UAVObjEvent *ev)
             for (uint32_t i = 0; i < NUM_SENSOR; i++) {
                 uint16_t value = sensorData.rawsensors[i];
                 if (value != 0xFFFF) {
-                    max = value > max ? value : max;
-                    min = value < min ? value : min;
+                    max[i] = value > max[i] ? value : max[i];
+                    min[i] = value < min[i] ? value : min[i];
                 } else {
-                    value = max;
+                    value = max[i];
                 }
+                max[i] *= (0.999f);
+                min[i] *= (1.001f);
             }
-            max = (0.999f) * max;
-            min = (1.001f) * min;
         }
         break;
 
         case LINESENSORSETTINGS_CALIBRATIONMODE_MANUAL:
         {
-            max = settings.max;
-            min = settings.min;
+            if(settingsUpdated){
+                memcpy(max,settings.max, sizeof(float) * NUM_SENSOR);
+                memcpy(min,settings.min, sizeof(float) * NUM_SENSOR);
+            }
             break;
         }
         case LINESENSORSETTINGS_CALIBRATIONMODE_DONE:
             if (!calibrationSaved) {
                 calibrationSaved = true;
-                LineSensorSettingsmaxSet(&max);
-                LineSensorSettingsminSet(&min);
+                LineSensorSettingsmaxSet(max);
+                LineSensorSettingsminSet(min);
             }
             break;
         }
 
-        sensorData.max = max;
-        sensorData.min = min;
-        float invrange = 1.0f / (sensorData.max - sensorData.min);
+
         float n1 = 0;
         float n2 = 0;
-        for (uint32_t i = 0; i < NUM_SENSOR; i++) {
-            float val = ((float)sensorData.rawsensors[i] - sensorData.min) * invrange;
+        {
+            for (uint32_t i = 0; i < NUM_SENSOR; i++) {
+                float rawvalue = (float)sensorData.rawsensors[i];
+                rawvalue = boundf(rawvalue, max[i],min[i]);
 
-            sensorData.sensors[i] = val;
-            n1 += val * (float)i;
-            n2 += val;
+                float val = (rawvalue - min[i]) / (max[i] - min[i]);
+                sensorData.sensors[i] = val;
+                n1 += val * (float)i;
+                n2 += val;
+            }
         }
-
         if (n2 > settings.TrackTreshold.Warning) {
             sensorData.TrackStatus = LINESENSOR_TRACKSTATUS_OK;
         } else if (n2 > settings.TrackTreshold.Lost) {
@@ -155,13 +163,15 @@ static void onTimer(__attribute__((unused)) UAVObjEvent *ev)
             sensorData.TrackStatus = LINESENSOR_TRACKSTATUS_NOTRACK;
         }
 
-        sensorData.value = (n1 / n2 - 2.5f) * settings.range + settings.offset;
+        sensorData.value = (n1 / n2 - ((float)NUM_SENSOR - 1.0f) * 0.5f ) * settings.range + settings.offset;
 
         LineSensorSet(&sensorData);
-        status = 0;
+        //status = 0;
         return;
+#if false
     }
     status++;
+#endif
 }
 
 /**

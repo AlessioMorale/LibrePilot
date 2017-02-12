@@ -2,8 +2,8 @@
     <object name="LineSensorSettings" singleinstance="true" settings="true" category="Sensors">
         <description>Settings for LineSensor module and calibration </description>
         <!-- Sensor calibration -->
-        <field name="min" units="raw" type="float" elements="1" defaultvalue = "0" />
-        <field name="max" units="raw" type="float" elements="1" defaultvalue = "45000"/>
+        <field name="min" units="raw" type="float" elements="8" defaultvalue = "0" />
+        <field name="max" units="raw" type="float" elements="8" defaultvalue = "45000"/>
         <field name="range" units="deg" type="float" elements="1" defaultvalue ="20"/>
         <field name="offset" units="deg" type="float" elements="1" defaultvalue ="20"/>
         <field name="CalibrationMode" units="" type="enum" elements="1" options="Enabled,Done,Manual" defaultvalue="Done"/>
