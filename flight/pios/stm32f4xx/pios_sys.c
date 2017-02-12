@@ -166,11 +166,16 @@ void PIOS_SYS_Init(void)
     GPIO_InitStructure.GPIO_Pin &= ~(GPIO_Pin_13 | GPIO_Pin_14); // leave JTAG pins alone
     GPIO_Init(GPIOA, &GPIO_InitStructure);
 
+
     GPIO_InitStructure.GPIO_Pin  = GPIO_Pin_All;
+    GPIO_InitStructure.GPIO_Pin  &= ~(GPIO_Pin_14 | GPIO_Pin_15);  // motor driver pins, they are externnally pulled down within the driver
     GPIO_Init(GPIOB, &GPIO_InitStructure);
 
     GPIO_InitStructure.GPIO_Pin  = GPIO_Pin_All;
+    GPIO_InitStructure.GPIO_Pin  &= ~(GPIO_Pin_7 | GPIO_Pin_8); // motor driver pins
     GPIO_Init(GPIOC, &GPIO_InitStructure);
+
+    GPIO_InitStructure.GPIO_Pin  = GPIO_Pin_All;
     GPIO_Init(GPIOD, &GPIO_InitStructure);
     GPIO_Init(GPIOE, &GPIO_InitStructure);
 
